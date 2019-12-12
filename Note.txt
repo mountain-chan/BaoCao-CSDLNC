@@ -1,0 +1,4 @@
+Phần báo cáo riêng: Mỗi sinh viên có ít nhất 3 chức năng(1 liên quan đến cập nhật, 1 liên quan đến thống kê):
+	+ Vẽ giao diện
+	+ Mô tả quy trình
+	+ Viết các câu lệnh SQL sử dụng cho chức năng đó(chỉ cần 	những câu lệnh phức tạp)
