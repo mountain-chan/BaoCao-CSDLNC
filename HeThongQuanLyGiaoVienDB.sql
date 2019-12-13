@@ -1,7 +1,7 @@
-﻿CREATE DATABASE QuanLyGiaoVienDB2
+﻿CREATE DATABASE HeThongQuanLyGiaoVienDB
 go
 
-USE QuanLyGiaoVienDB2
+USE HeThongQuanLyGiaoVienDB
 go
 
 ---------------Thông Tin Cá Nhân Và Thông Tin Liên Quan
@@ -317,7 +317,7 @@ Create table DoAnMonHoc
 (
 	Id int Identity Primary key,
 	Ten Nvarchar(200),
-	DonViTinh Nvarchar(20),
+	DonViTinh float,
 	GioChuan float
 )
 go
@@ -338,7 +338,7 @@ Create table LoaiHuongDan
 (
 	Id int Identity Primary key,
 	Ten Nvarchar(200),
-	DonViTinh Nvarchar(20),
+	DonViTinh float,
 	GioChuan float
 )
 go
@@ -362,7 +362,7 @@ Create table LoaiDayHoc
 	Id int Identity Primary key,
 	Ten Nvarchar(200),
 	GioChuan float,
-	DonViTinh Nvarchar(20)
+	DonViTinh float
 )
 go
 Create table HocPhan
@@ -400,7 +400,7 @@ Create table LoaiChamThi
 (
 	Id int Identity Primary key,
 	Ten Nvarchar(200),
-	DonViTinh Nvarchar(20),
+	DonViTinh float,
 	GioChuan float
 )
 go
@@ -434,7 +434,7 @@ Create table LoaiSach
 (
 	Id int Identity Primary key,
 	Ten Nvarchar(200),
-	DonViTinh Nvarchar(20),
+	DonViTinh float,
 	GioChuan float,
 	GhiChu Ntext
 )
@@ -446,8 +446,8 @@ Create table Sach
 	Ten Nvarchar(100),
 	NoiXuatBan Nvarchar(100),
 	NgayXuatBan Date,
-	SoTrang int,
-	SoTinChi int,
+	SoTrang int default 0,
+	SoTinChi int default 0,
 	IdLoaiSach int references LoaiSach(Id)
 )
 go
@@ -458,14 +458,14 @@ Create table GV_BienSoanSach
 	IdGiaoVien int references GiaoVien(Id),
 	IdSach int references Sach(Id),
 	VaiTro Nvarchar(100),
-	SoTrangDaViet int
+	SoTrangDaViet int default 0
 )
 go
 Create table LoaiBaiBao
 (
 	Id int Identity Primary key,
 	Ten Nvarchar(300),
-	DonViTinh Nvarchar(20),
+	DonViTinh float,
 	GioChuan float,
 	GhiChu Ntext
 )
@@ -492,7 +492,7 @@ Create table LoaiDeTaiNghienCuu
 (
 	Id int Identity Primary key,
 	Ten Nvarchar(200),
-	DonViTinh Nvarchar(20),
+	DonViTinh float,
 	GioChuan float,
 	GhiChu Ntext
 )
@@ -505,7 +505,7 @@ Create table DeTai
 	NgayBatDau Date,
 	NgayKetThuc Date,
 	CoQuanQuanLy Nvarchar(200),
-	TinhTrang Nvarchar(50),
+	TinhTrang bit, -- 1 đã nghiệm thu, 0 chưa nghiệm thu
 	IdLoaiDeTai int references LoaiDeTaiNghienCuu(Id)
 )
 go
