@@ -67,25 +67,39 @@ Create table GV_BoMon
 )
 go
 
+Create table DinhMucNghienCuu
+(
+	Id int Identity Primary key,
+	DinhMucGioChuan float
+)
+go
+Create table DinhMucGiangDay
+(
+	Id int Identity Primary key,
+	QuyDinhChung float
+)
+go
+Create table TyLeMienGiam
+(
+	Id int Identity Primary key,
+	TyLe float
+)
+go
 Create table HocHam
 (
 	Id int Identity Primary key,
-	Ten Nvarchar(50)
+	Ten Nvarchar(50),
+	IdDMGiangDay int references DinhMucGiangDay(Id),
+	IdDMNghCuu int references DinhMucNghienCuu(Id),
 )
 go
 Create table ChucDanh_ChMonNV
 (
 	Id int Identity Primary key,
-	Ten Nvarchar(50)
+	Ten Nvarchar(50),
+	IdDMNghCuu int references DinhMucNghienCuu(Id)
 )
-go
-Create table DinhMucNghienCuu
-(
-	Id int Identity Primary key,
-	IdChucDanh int references ChucDanh_ChMonNV(Id),
-	IdHocHam int references HocHam(Id),
-	DinhMucGioChuan float
-)
+
 go
 Create table GV_HocHam
 (
@@ -107,15 +121,8 @@ go
 Create table ChucVu_ChMonKT
 (
 	Id int Identity Primary key,
-	Ten Nvarchar(50)
-)
-go
-Create table DinhMucGiangDay
-(
-	Id int Identity Primary key,
-	IdChucVu int references ChucVu_ChMonKT(Id),
-	IdHocHam int references HocHam(Id),
-	QuyDinhChung float
+	Ten Nvarchar(50),
+	IdDMGiangDay int references DinhMucGiangDay(Id),
 )
 go
 Create table GV_ChucVuChMKT
@@ -145,7 +152,7 @@ Create table ChucVuChinhQuyen
 (
 	Id int Identity Primary key,
 	Ten Nvarchar(50),
-	TyLeMienGiam int
+	IdTLMienGiam int references TyLeMienGiam(Id)
 )
 go
 
@@ -172,7 +179,7 @@ Create table ChucVuDang
 (
 	Id int Identity Primary key,
 	Ten Nvarchar(50),
-	TyLeMienGiam int
+	IdTLMienGiam int references TyLeMienGiam(Id)
 )
 go
 Create table GV_ChucVuDang
@@ -313,27 +320,6 @@ go
 
 -----------------------------------------Huong Dan
 
-Create table DoAnMonHoc
-(
-	Id int Identity Primary key,
-	Ten Nvarchar(200),
-	DonViTinh float,
-	GioChuan float
-)
-go
-
-Create table GV_DoAnMonHoc
-(
-	Id int Identity Primary key,
-	IdGiaoVien int references GiaoVien(Id),
-	IdDoAnMonHoc int references DoAnMonHoc(Id),
-	SoLuongHocVien int,
-	NamHoc int,
-	KiHoc int
-)
-go
-
-
 Create table LoaiHuongDan
 (
 	Id int Identity Primary key,
@@ -410,19 +396,7 @@ Create table GV_ChamThi
 	Id int Identity Primary key,
 	IdGiaoVien int references GiaoVien(Id),
 	IdLoaiChamThi int references LoaiChamThi(Id),
-	SoHocVien int,
-	NamHoc int,
-	KiHoc int
-)
-go
-
-
-Create table GV_ChamThiDoAnBTL
-(
-	Id int Identity Primary key,
-	IdGiaoVien int references GiaoVien(Id),
-	IdLoaiChamThi int references LoaiChamThi(Id),
-	SoDoAn int,
+	SoLuong int,
 	NamHoc int,
 	KiHoc int
 )
@@ -446,8 +420,8 @@ Create table Sach
 	Ten Nvarchar(100),
 	NoiXuatBan Nvarchar(100),
 	NgayXuatBan Date,
-	SoTrang int default 0,
 	SoTinChi int default 0,
+	SoThanhVien int default 0,
 	IdLoaiSach int references LoaiSach(Id)
 )
 go
@@ -457,10 +431,11 @@ Create table GV_BienSoanSach
 	Id int Identity Primary key,
 	IdGiaoVien int references GiaoVien(Id),
 	IdSach int references Sach(Id),
-	VaiTro Nvarchar(100),
+	LaChuBien int check (0 <= LaChuBien and LaChuBien <= 1) default 0, -- 1 là cán bộ chủ biên
 	SoTrangDaViet int default 0
 )
 go
+
 Create table LoaiBaiBao
 (
 	Id int Identity Primary key,
@@ -488,7 +463,8 @@ Create table GV_BaiBao
 	VaiTro Nvarchar(50)
 )
 go
-Create table LoaiDeTaiNghienCuu
+
+Create table LoaiDeTai
 (
 	Id int Identity Primary key,
 	Ten Nvarchar(200),
@@ -506,7 +482,8 @@ Create table DeTai
 	NgayKetThuc Date,
 	CoQuanQuanLy Nvarchar(200),
 	TinhTrang bit, -- 1 đã nghiệm thu, 0 chưa nghiệm thu
-	IdLoaiDeTai int references LoaiDeTaiNghienCuu(Id)
+	SoThanhVien int,
+	IdLoaiDeTai int references LoaiDeTai(Id)
 )
 go
 Create table GV_DeTaiNghienCuu
@@ -514,5 +491,5 @@ Create table GV_DeTaiNghienCuu
 	Id int Identity Primary key,
 	IdGiaoVien int references GiaoVien(Id),
 	IdDeTai int references DeTai(Id),
-	VaiTro Nvarchar(50)
+	LaChuTri int check (0 <= LaChuTri and LaChuTri <= 1) default 0 -- 1 là cán bộ chủ trì
 )
