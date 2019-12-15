@@ -31,7 +31,7 @@ go
 Create table CN_Khoa
 (
 	Id int Identity Primary key,
-	IdChuNhiem int references GiaoVien(Id),
+	IdChuNghiem int references GiaoVien(Id),
 	IdKhoa int references Khoa(Id),
 	NgayBatDau Date,
 	NgayKetThuc Date
@@ -50,7 +50,7 @@ go
 Create table CN_BoMon
 (
 	Id int Identity Primary key,
-	IdChuNhiem int references GiaoVien(Id),
+	IdChuNghiem int references GiaoVien(Id),
 	IdBoMon int references BoMon(Id),
 	NgayBatDau Date,
 	NgayKetThuc Date
@@ -230,7 +230,7 @@ Create table GV_DaiHoc
 	Id int Identity Primary key,
 	IdGiaoVien int references GiaoVien(Id),
 	IdDaiHoc int references daihoc(Id),
-	NamTotNghiem int
+	NamTotNghiep int
 )
 go
 Create table ThacSi
