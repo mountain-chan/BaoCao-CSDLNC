@@ -678,19 +678,6 @@ begin
 end
 go
 
---Trigger update for table LoaiDayHoc
-create trigger update_LoaiDayHoc on LoaiDayHoc for update
-as
-begin
-	declare @Id int, @IdLopHocPhan int, @GioChuan float, @DonViTinh float
-	select @Id=Id, @GioChuan=GioChuan, @DonViTinh=DonViTinh from inserted
-
-	select @IdLopHocPhan=LopHocPhan.Id from HocPhan join LopHocPhan 
-	on LopHocPhan.IdHocPhan=HocPhan.Id where HocPhan.IdLoaiDayHoc=@Id
-	update GV_LopHocPhan set SoGio=@GioChuan*SoTiet/@DonViTinh  where IdLopHocPhan=@IdLopHocPhan 
-end
-go
-
 
 --Trigger insert for table GV_DeTaiNghienCuu
 create trigger Insert_GV_DeTaiNghienCuu on GV_DeTaiNghienCuu for insert
@@ -850,7 +837,7 @@ create trigger update_ChucVuDang on ChucVuDang for update
 as
 begin
 	declare @IdChucVuDang int, @IdTyLeMienGiam int, @TyLeMienGiam float
-	select @IdChucVuDang=Id, @IdTyLeMienGiam=IdTyLeMienGiam from inserted
+	select @IdChucVuDang=Id, @IdTyLeMienGiam=IdTLMienGiam from inserted
 
 	select @TyLeMienGiam=TyLe from TyLeMienGiam where TyLeMienGiam.Id=@IdTyLeMienGiam
 
@@ -872,25 +859,61 @@ begin
 end
 go
 
+--Trigger update for table LoaiDayHoc
+create trigger update_LoaiDayHoc on LoaiDayHoc for update
+as
+begin
+	declare @Id int, @IdLopHocPhan int, @GioChuan float, @DonViTinh float
+	select @Id=Id, @GioChuan=GioChuan, @DonViTinh=DonViTinh from inserted
+
+	select @IdLopHocPhan=LopHocPhan.Id from HocPhan join LopHocPhan 
+	on LopHocPhan.IdHocPhan=HocPhan.Id where HocPhan.IdLoaiDayHoc=@Id
+	update GV_LopHocPhan set SoGio=@GioChuan*SoTiet/@DonViTinh  where IdLopHocPhan=@IdLopHocPhan 
+end
+go
+
+--Trigger update for table LopHocPhan
+create trigger update_LopHocPhan on LopHocPhan for update
+as
+begin
+	declare @IdLopHocPhan int, @IdHocPhan int, @GioChuan float, @DonViTinh float
+	select @IdLopHocPhan=Id, @IdHocPhan=IdHocPhan from inserted
+
+	select @GioChuan=GioChuan, @DonViTinh=DonViTinh from LoaiDayHoc join HocPhan 
+	on LoaiDayHoc.Id=HocPhan.IdLoaiDayHoc where HocPhan.Id=@IdHocPhan
+	update GV_LopHocPhan set SoGio=@GioChuan*SoTiet/@DonViTinh  where IdLopHocPhan=@IdLopHocPhan
+end
+go
+
+--Trigger update for table HocPhan
+create trigger update_HocPhan on HocPhan for update
+as
+begin
+	declare @IdHocPhan int, @IdLopHocPhan int, @IdLoaiDayHoc int, @GioChuan float, @DonViTinh float
+	select @IdHocPhan=Id, @IdLoaiDayHoc=IdLoaiDayHoc from inserted
+
+	select @GioChuan=GioChuan, @DonViTinh=DonViTinh from LoaiDayHoc where Id=@IdLoaiDayHoc
+	select @IdLopHocPhan=Id from LopHocPhan where IdHocPhan=@IdHocPhan
+	update GV_LopHocPhan set SoGio=@GioChuan*SoTiet/@DonViTinh  where IdLopHocPhan=@IdLopHocPhan 
+end
+go
+
+
 --create procedure thống kê tải dạy học của một giáo viên theo năm học và kì học
 create proc ThongKeTaiDayHoc
 	@IdGiaoVien int,
 	@NamHoc int,
-	@KiHoc int
+	@KiHoc int,
+	@IdHe int
 
 	as
 	begin
 		select sum(SoGio) from LopHocPhan join GV_LopHocPhan 
-		on LopHocPhan.Id=GV_LopHocPhan.IdLopHocPhan
+		on LopHocPhan.Id=GV_LopHocPhan.IdLopHocPhan join HocPhan
+		on HocPhan.Id=LopHocPhan.IdHocPhan
 		where GV_LopHocPhan.IdGiaoVien = @IdGiaoVien 
-		and NamHoc=@NamHoc and KiHoc=@KiHoc 
+		and NamHoc=@NamHoc and KiHoc=@KiHoc and IdDoiTuongHoc=@IdHe 
 	end
-
-
-
-
-
-
 
 
 
