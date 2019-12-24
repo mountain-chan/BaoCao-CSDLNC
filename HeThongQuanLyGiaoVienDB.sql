@@ -523,22 +523,6 @@ begin
 end
 go
 
---Trigger insert for table GV_HocHam
-create trigger Insert_GV_HocHam on GV_HocHam for insert
-as
-begin
-	declare @Id int, @IdHocHam int, @DinhMucGiangDay float, @DinhMucNghCuu float
-	select @Id=Id, @IdHocHam=IdHocHam from inserted
-
-	select @DinhMucGiangDay=QuyDinhChung from DinhMucGiangDay join HocHam 
-	on DinhMucGiangDay.Id=HocHam.IdDMGiangDay where HocHam.Id=@IdHocHam
-	update GV_HocHam set DinhMucGiangDay=@DinhMucGiangDay where Id=@Id 
-
-	select @DinhMucNghCuu=DinhMucGioChuan from DinhMucNghienCuu join HocHam 
-	on DinhMucNghienCuu.Id=HocHam.IdDMNghCuu where HocHam.Id=@IdHocHam
-	update GV_HocHam set DinhMucNghienCuu=@DinhMucNghCuu where Id=@Id 
-end
-go
 
 --Trigger insert for table GV_ChucDanhChMNV
 create trigger Insert_GV_ChucDanhChMNV on GV_ChucDanhChMNV for insert
@@ -613,6 +597,7 @@ begin
 	update GV_ChucVuDang set TyLeMienGiam=@TyLeMienGiam  where Id=@Id 
 end
 go
+
 
 --Trigger update for table TyLeMienGiam
 create trigger update_TyLeMienGiam on TyLeMienGiam for update
@@ -839,6 +824,77 @@ begin
 		update GV_BienSoanSach set SoGio=(LaChuBien*@GioChuan*@SoTinChi/5+@GioChuan*@SoTinChi*4/(5*@SoThanhVien)) where IdSach=@Id
 end
 go
+
+
+--=================================Ly Chan==
+
+--Trigger insert for table GV_HocHam
+create trigger Insert_GV_HocHam on GV_HocHam for insert
+as
+begin
+	declare @Id int, @IdHocHam int, @DinhMucGiangDay float, @DinhMucNghCuu float
+	select @Id=Id, @IdHocHam=IdHocHam from inserted
+
+	select @DinhMucGiangDay=QuyDinhChung from DinhMucGiangDay join HocHam 
+	on DinhMucGiangDay.Id=HocHam.IdDMGiangDay where HocHam.Id=@IdHocHam
+	update GV_HocHam set DinhMucGiangDay=@DinhMucGiangDay where Id=@Id 
+
+	select @DinhMucNghCuu=DinhMucGioChuan from DinhMucNghienCuu join HocHam 
+	on DinhMucNghienCuu.Id=HocHam.IdDMNghCuu where HocHam.Id=@IdHocHam
+	update GV_HocHam set DinhMucNghienCuu=@DinhMucNghCuu where Id=@Id 
+end
+go
+
+--Trigger update for table ChucVuDang
+create trigger update_ChucVuDang on ChucVuDang for update
+as
+begin
+	declare @IdChucVuDang int, @IdTyLeMienGiam int, @TyLeMienGiam float
+	select @IdChucVuDang=Id, @IdTyLeMienGiam=IdTyLeMienGiam from inserted
+
+	select @TyLeMienGiam=TyLe from TyLeMienGiam where TyLeMienGiam.Id=@IdTyLeMienGiam
+
+	update GV_ChucVuDang set TyLeMienGiam=@TyLeMienGiam where IdChucVuDang=@IdChucVuDang 
+end
+go
+
+--Trigger insert for table GV_LopHocPhan
+create trigger Insert_GV_LopHocPhan on GV_LopHocPhan for insert
+as
+begin
+	declare @Id int, @IdLopHocPhan int, @SoGio float
+	select @Id=Id, @IdLopHocPhan=IdLopHocPhan from inserted
+
+	select @SoGio=GioChuan*SoTiet/DonViTinh from LoaiDayHoc join HocPhan 
+	on LoaiDayHoc.Id=HocPhan.IdLoaiDayHoc join LopHocPhan on LopHocPhan.IdHocPhan=HocPhan.Id
+	join GV_LopHocPhan on GV_LopHocPhan.IdLopHocPhan=LopHocPhan.Id where LopHocPhan.Id=@IdLopHocPhan
+	update GV_LopHocPhan set SoGio=@SoGio  where Id=@Id
+end
+go
+
+--create procedure thống kê tải dạy học của một giáo viên theo năm học và kì học
+create proc ThongKeTaiDayHoc
+	@IdGiaoVien int,
+	@NamHoc int,
+	@KiHoc int
+
+	as
+	begin
+		select sum(SoGio) from LopHocPhan join GV_LopHocPhan 
+		on LopHocPhan.Id=GV_LopHocPhan.IdLopHocPhan
+		where GV_LopHocPhan.IdGiaoVien = @IdGiaoVien 
+		and NamHoc=@NamHoc and KiHoc=@KiHoc 
+	end
+
+
+
+
+
+
+
+
+
+
 
 --======================================== Add some data for test ==============
 
