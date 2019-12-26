@@ -2,39 +2,42 @@
 -- Thực hiện chức năng cập nhật thông tin một loại sách
 -- Tổng hợp tải khảo thí của một giáo viên theo năm học và kì học
 
--- Thủ tục thêm một giáo viên chấm thi theo một loại chấm thi
-create proc sp_Insert_GV_ChamThi
+-- Thủ tục thêm một giáo viên hướng dẫn
+create proc sp_Insert_GV_HuongDan
 	@IdGiaoVien int,
-	@IdLoaiChamThi int,
-	@SoLuong int,
-	@NamHoc varchar(10),
-	@KiHoc int
+	@IdHocVien int,
+	@IdLoaiHuongDan int,
+	@TenDeTai nvarchar(100),
+	@NgayBatDau Date,
+	@NgayKetThuc Date,
+	@BaoVeThanhCong bit
 as
 begin
-	insert into GV_ChamThi(IdGiaoVien, IdLoaiChamThi, SoLuong, NamHoc, KiHoc)
-	values(@IdGiaoVien, @IdLoaiChamThi, @SoLuong, @NamHoc, @KiHoc)
-end
-
--- Khi insert dữ liệu vào bảng GV_ChamThi sẽ cần cập nhật lại trường dư thừa Số Giờ chấm thi bằng 1 trigger
--- Số giờ chấm thi sẽ được tính bằng Số lượng bài thi * Giờ chuẩn / Đơn vị tính của Loại chấm thi
-create trigger trg_Insert_GV_ChamThi on GV_ChamThi for insert
-as
-begin
-	declare @Id int, @IdLoaiChamThi int, @SoGio float
-	select @Id=Id, @IdLoaiChamThi=IdLoaiChamThi from inserted
-	select @SoGio=GioChuan*SoLuong/DonViTinh from LoaiChamThi join GV_ChamThi 
-	on LoaiChamThi.Id=GV_ChamThi.IdLoaiChamThi where LoaiChamThi.Id=@IdLoaiChamThi
-	update GV_ChamThi set SoGio=@SoGio  where Id=@Id 
+	insert into GV_HuongDan(IdGiaoVien, IdHocVien, IdLoaiHuongDan, TenDeTai, NgayBatDau, NgayKetThuc, BaoVeThanhCong)
+	values(@IdGiaoVien, @IdHocVien, @IdLoaiHuongDan, @TenDeTai, @NgayBatDau, @NgayKetThuc, @BaoVeThanhCong)
 end
 go
 
--- Khi bảng Loại chấm thi được cập nhật cũng cần cập nhật lại số giờ chấm thi của bàng GV_ChamThi bằng một trigger update
-create trigger trg_Update_LoaiChamThi on LoaiChamThi for update
+-- Khi insert dữ liệu vào bảng GV_HuongDan sẽ cần cập nhật lại trường dư thừa Số Giờ hướng dẫn bằng 1 trigger
+-- Số giờ hướng dẫn sẽ được tính bằng Giờ chuẩn / Đơn vị tính của Loại hướng dẫn
+create trigger trg_Insert_GV_HuongDan on GV_HuongDan for insert
+as
+begin
+	declare @Id int, @IdLoaiHuongDan int, @SoGio float
+	select @Id=Id, @IdLoaiHuongDan=IdLoaiHuongDan from inserted
+	select @SoGio=GioChuan/DonViTinh from LoaiHuongDan join GV_HuongDan 
+	on LoaiHuongDan.Id=GV_HuongDan.IdLoaiHuongDan where LoaiHuongDan.Id=@IdLoaiHuongDan
+	update GV_HuongDan set SoGio=@SoGio  where Id=@Id
+end
+go
+
+-- Khi bảng Loại hướng dẫn được cập nhật cũng cần cập nhật lại số giờ hướng dẫn của bàng GV_HuongDan bằng một trigger update
+create trigger update_LoaiHuongDan on LoaiHuongDan for update
 as
 begin
 	declare @Id int, @GioChuan float, @DonViTinh float
 	select @Id=Id, @GioChuan=GioChuan, @DonViTinh=DonViTinh from inserted
-	update GV_ChamThi set SoGio=@GioChuan*SoLuong/@DonViTinh  where IdLoaiChamThi=@Id 
+	update GV_HuongDan set SoGio=@GioChuan/@DonViTinh  where IdLoaiHuongDan=@Id 
 end
 go
 
@@ -47,35 +50,52 @@ begin
 	set @SameTuKhoa='%'+@TuKhoa+'%'
 	select Id, Ma, Ten from GiaoVien where Ma like @SameTuKhoa or Ten like @SameTuKhoa
 end
+go
 
--- Thủ tục cập nhật thông tin một loại sách
-create proc sp_Update_LoaiSach
+-- Thủ tục cập nhật thông tin một đề tài
+create proc sp_Update_DeTai
 	@Id int,
-	@Ten Nvarchar(100),
-	@DonViTinh Float,
-	@GioChuan Float,
-	@GhiChu Ntext
+	@IdLoaiDeTai int,
+	@Ma varchar(6),
+	@Ten nvarchar(100),
+	@NgayBatDau Date,
+	@NgayKetThuc Date,
+	@CoQuanQuanLy nvarchar(50),
+	@TinhTrang bit
 as
 begin
-	update LoaiSach
-	set Ten=@Ten, DonViTinh=@DonViTinh, GioChuan=@GioChuan, GhiChu=@GhiChu
+	update DeTai
+	set IdLoaiDeTai=@IdLoaiDeTai, Ma=@Ma, Ten=@Ten,
+	NgayBatDau=@NgayBatDau, NgayKetThuc=@NgayKetThuc,
+	CoQuanQuanLy=@CoQuanQuanLy, TinhTrang=@TinhTrang
 	where Id=@Id
 end
+go
 
--- Khi sửa một Loại sách, trường SoGio biên soạn sách của Giáo viên sẽ bị thay đổi nên cần dùng một trigger để cập nhật trường SoGio
-create trigger trg_Update_LoaiSach on LoaiSach for update
+-- Khi sửa thông tin bảng đề tài, do trường số giờ nghiên cứu của bảng
+-- GV_DeTaiNghienCuu phụ thuộc vào IdDeTai nên cần tính lại số giờ
+create trigger trg_Update_DeTai on DeTai for update
 as
 begin
-	declare @Id int, @IdSach int, @SoThanhVien int, @GioChuan float, @DonViTinh float, @SoTinChi float
-	select @Id=Id, @GioChuan=GioChuan, @DonViTinh=DonViTinh from inserted
+	declare @Id int, @SoThanhVien int, @GioChuan float, @DonViTinh  float
+	select @Id=Id, @SoThanhVien=SoThanhVien from inserted
+	select @GioChuan=GioChuan, @DonViTinh=DonViTinh from LoaiDeTai 
+	join DeTai on LoaiDeTai.Id=DeTai.IdLoaiDeTai where DeTai.Id=@Id
+	update GV_DeTaiNghienCuu set SoGio=(LaChuTri*@GioChuan/5 + @GioChuan*4/(5*@SoThanhVien)) where IdDeTai=@Id 
+end
+go
 
-	select @IdSach=Sach.Id, @SoThanhVien=SoThanhVien, @SoTinChi=SoTinChi from LoaiSach 
-	join Sach on LoaiSach.Id=Sach.IdLoaiSach where LoaiSach.Id=@Id
-
-	if(@Id = 1)
-		update GV_BienSoanSach set SoGio=@GioChuan*SoTrangDaViet/@DonViTinh  where IdSach=@IdSach
-	else
-		update GV_BienSoanSach set SoGio=(LaChuBien*@GioChuan*@SoTinChi/5+@GioChuan*@SoTinChi*4/(5*@SoThanhVien)) where IdSach=@IdSach
+-- Khi bảng GV_DeTaiNghienCuu có thay đổi (thêm, bớt hoặc sửa thành viên) cần cập nhật lại
+-- bảng DeTai trường SoThanhVien bằng một trigger
+alter trigger trg_Update_GV_DeTaiNghienCuu on GV_DeTaiNghienCuu for insert, update, delete
+as
+begin
+	if (select count(*) from inserted) > 0
+		update DeTai
+		set SoThanhVien=SoThanhVien+(select count(IdDeTai) from inserted where IdDeTai=DeTai.Id)
+	if (select count(*) from deleted) > 0
+		update DeTai
+		set SoThanhVien=SoThanhVien-(select count(IdDeTai) from deleted where IdDeTai=DeTai.Id)
 end
 go
 
@@ -91,6 +111,7 @@ begin
 	where GV_ChamThi.IdGiaoVien = @IdGiaoVien 
 	and NamHoc=@NamHoc and KiHoc=@KiHoc
 end
+go
 
 -- Thủ tục tính tải khảo thí của toàn bộ giáo viên theo một năm học và kì học
 create proc sp_TongHopTaiKhaoThi
@@ -103,6 +124,7 @@ begin
 	left join LoaiChamThi on GV_ChamThi.IdLoaiChamThi=LoaiChamThi.Id 
 	group by Ma, GiaoVien.Ten, IdGiaoVien
 end
+go
 
 -- Trong đó trường Số giờ của bảng Chấm thi sẽ được cập nhật khi bảng GV_ChamThi có thêm Giáo viên hoặc bảng Loại chấm thi được cập nhật
 
@@ -129,10 +151,24 @@ begin
 end
 go
 
-insert into LoaiChamThi values
-('Loai 1', 1.0, 10),
-('Loai 2', 1.2, 20),
-('Loai 3', 1.4, 30)
+
+insert into DeTai(Ma, IdLoaiDeTai, Ten, NgayBatDau, NgayKetThuc, CoQuanQuanLy, SoThanhVien, TinhTrang) values
+('DT001', 1, 'De Tai 1', '2019-12-26', '2020-06-26', 'ABC', 1, 0)
+go
+insert into DeTai(Ma, IdLoaiDeTai, Ten, NgayBatDau, NgayKetThuc, CoQuanQuanLy, SoThanhVien, TinhTrang) values
+('DT002', 1, 'De Tai 2', '2019-12-26', '2020-06-26', 'DEF', 1, 0)
+go
+insert into GV_DeTaiNghienCuu values
+(1, 17, 1, 10),
+(1, 16, 1, 20)
+go
+update GV_DeTaiNghienCuu set IdDeTai=16 where IdDeTai=17
+go
+delete from GV_DeTaiNghienCuu where id=1
+go
+insert into LoaiChamThi values ('Loai 1', 1.0, 10)
+insert into LoaiChamThi values ('Loai 2', 1.2, 20)
+insert into LoaiChamThi values ('Loai 3', 1.4, 30)
 go
 sp_Insert_GV_ChamThi 1, 1, 20, '2019-2020', 1
 go
