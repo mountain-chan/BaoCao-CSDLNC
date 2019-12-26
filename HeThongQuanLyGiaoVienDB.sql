@@ -432,7 +432,7 @@ Create table Sach
 	NoiXuatBan Nvarchar(100),
 	NgayXuatBan Date,
 	SoTinChi int default 0,
-	SoThanhVien int check (SoThanhVien <> 0),
+	SoThanhVien int default 0,
 	IdLoaiSach int references LoaiSach(Id)
 )
 go
@@ -464,7 +464,7 @@ Create table BaiBao
 	Ten Nvarchar(100),
 	TenTapChiCongBo Nvarchar(150),
 	NgayCongBo Date,
-	SoThanhVien int check (SoThanhVien <> 0) not null,
+	SoThanhVien int default 0,
 	IdLoaiBaiBao int references LoaiBaiBao(Id),
 )
 go
@@ -496,7 +496,7 @@ Create table DeTai
 	NgayKetThuc Date,
 	CoQuanQuanLy Nvarchar(200),
 	TinhTrang bit, -- 1 đã nghiệm thu, 0 chưa nghiệm thu
-	SoThanhVien int check (SoThanhVien <> 0) not null,
+	SoThanhVien int default 0,
 	IdLoaiDeTai int references LoaiDeTai(Id)
 )
 go
@@ -514,8 +514,9 @@ go
 
 --=================================Ly Chan==
 
---Trigger insert for table GV_HocHam
-create trigger Insert_GV_HocHam on GV_HocHam for insert
+
+--Trigger insert, update for table GV_HocHam
+create trigger IU_GV_HocHam on GV_HocHam for insert, update
 as
 begin
 	declare @Id int, @IdHocHam int, @DinhMucGiangDay float, @DinhMucNghCuu float
@@ -532,8 +533,8 @@ end
 go
 
 
---Trigger insert for table GV_ChucVuChMKT
-create trigger Them_GV_ChucVuCMKT on GV_ChucVuChMKT for insert
+--Trigger insert, update for table GV_ChucVuChMKT
+create trigger IU_GV_ChucVuCMKT on GV_ChucVuChMKT for insert, update
 as
 begin
 	declare @Id int, @IdChucVu int, @DinhMucGiangDay float
@@ -546,8 +547,9 @@ begin
 end
 go
 
---Trigger update for table ChucVuDang
-create trigger Insert_GV_ChucVuDang on GV_ChucVuDang for insert
+
+--Trigger insert, update for table ChucVuDang
+create trigger IU_GV_ChucVuDang on GV_ChucVuDang for insert, update
 as
 begin
 	declare @Id int, @IdChucVu int, @TyLeMienGiam   float
@@ -572,8 +574,9 @@ begin
 end
 go
 
---Trigger insert for table GV_LopHocPhan
-create trigger Insert_GV_LopHocPhan on GV_LopHocPhan for insert
+
+--Trigger insert, update for table GV_LopHocPhan
+create trigger IU_GV_LopHocPhan on GV_LopHocPhan for insert, update
 as
 begin
 	declare @Id int, @IdLopHocPhan int, @GioChuan float, @DonViTinh float

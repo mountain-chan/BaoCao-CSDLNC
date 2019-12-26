@@ -1,8 +1,8 @@
 ﻿USE HeThongQuanLyGiaoVienDB
 go
 
---Trigger insert for table GV_HocHam
-create trigger Insert_GV_HocHam on GV_HocHam for insert
+--Trigger insert, update for table GV_HocHam
+create trigger IU_GV_HocHam on GV_HocHam for insert, update
 as
 begin
 	declare @Id int, @IdHocHam int, @DinhMucGiangDay float, @DinhMucNghCuu float
