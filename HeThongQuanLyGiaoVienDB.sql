@@ -547,6 +547,19 @@ end
 go
 
 --Trigger update for table ChucVuDang
+create trigger Insert_GV_ChucVuDang on GV_ChucVuDang for insert
+as
+begin
+	declare @Id int, @IdChucVu int, @TyLeMienGiam   float
+	select @Id=Id, @IdChucVu=IdChucVuDang from inserted
+
+	select @TyLeMienGiam=TyLe from TyLeMienGiam  join ChucVuDang 
+	on TyLeMienGiam.Id=ChucVuDang.IdTLMienGiam where ChucVuDang.Id=@IdChucVu
+	update GV_ChucVuDang set TLMienGiam=@TyLeMienGiam  where Id=@Id 
+end
+go
+
+--Trigger update for table ChucVuDang
 create trigger update_ChucVuDang on ChucVuDang for update
 as
 begin
@@ -623,7 +636,7 @@ go
 
 
 --create procedure thống kê tải dạy học của một giáo viên theo năm học và kì học
-alter proc ThongKeTaiDayHoc
+create proc ThongKeTaiDayHoc
 	@IdGiaoVien int,
 	@NamHoc varchar(10),
 	@KiHoc int,
@@ -688,6 +701,22 @@ INSERT [dbo].[GV_HocHam] ([IdGiaoVien], [IdHocHam], [NgayNhan]) VALUES (2, 2, CA
 INSERT [dbo].[GV_HocHam] ([IdGiaoVien], [IdHocHam], [NgayNhan]) VALUES (3, 2, CAST(N'2012-01-01' AS Date))
 INSERT [dbo].[GV_HocHam] ([IdGiaoVien], [IdHocHam], [NgayNhan]) VALUES (4, 1, CAST(N'2010-01-01' AS Date))
 INSERT [dbo].[GV_HocHam] ([IdGiaoVien], [IdHocHam], [NgayNhan]) VALUES (5, 2, CAST(N'2012-01-10' AS Date))
+go
+
+INSERT [dbo].[GV_ChucVuDang] ([IdGiaoVien], [IdChucVuDang], [NgayNhan]) VALUES (1, 1, CAST(N'2000-01-01' AS Date))
+INSERT [dbo].[GV_ChucVuDang] ([IdGiaoVien], [IdChucVuDang], [NgayNhan]) VALUES (1, 2, CAST(N'2009-01-01' AS Date))
+INSERT [dbo].[GV_ChucVuDang] ([IdGiaoVien], [IdChucVuDang], [NgayNhan]) VALUES (1, 3, CAST(N'2009-01-01' AS Date))
+INSERT [dbo].[GV_ChucVuDang] ([IdGiaoVien], [IdChucVuDang], [NgayNhan]) VALUES (1, 4, CAST(N'2019-01-01' AS Date))
+INSERT [dbo].[GV_ChucVuDang] ([IdGiaoVien], [IdChucVuDang], [NgayNhan]) VALUES (2, 1, CAST(N'2000-01-01' AS Date))
+INSERT [dbo].[GV_ChucVuDang] ([IdGiaoVien], [IdChucVuDang], [NgayNhan]) VALUES (3, 1, CAST(N'2000-01-01' AS Date))
+INSERT [dbo].[GV_ChucVuDang] ([IdGiaoVien], [IdChucVuDang], [NgayNhan]) VALUES (4, 1, CAST(N'2000-01-01' AS Date))
+INSERT [dbo].[GV_ChucVuDang] ([IdGiaoVien], [IdChucVuDang], [NgayNhan]) VALUES (5, 1, CAST(N'2000-01-01' AS Date))
+INSERT [dbo].[GV_ChucVuDang] ([IdGiaoVien], [IdChucVuDang], [NgayNhan]) VALUES (6, 1, CAST(N'2000-01-01' AS Date))
+INSERT [dbo].[GV_ChucVuDang] ([IdGiaoVien], [IdChucVuDang], [NgayNhan]) VALUES (7, 1, CAST(N'2000-01-01' AS Date))
+INSERT [dbo].[GV_ChucVuDang] ([IdGiaoVien], [IdChucVuDang], [NgayNhan]) VALUES (8, 1, CAST(N'2000-01-01' AS Date))
+INSERT [dbo].[GV_ChucVuDang] ([IdGiaoVien], [IdChucVuDang], [NgayNhan]) VALUES (9, 1, CAST(N'2000-01-01' AS Date))
+INSERT [dbo].[GV_ChucVuDang] ([IdGiaoVien], [IdChucVuDang], [NgayNhan]) VALUES (10, 1, CAST(N'2000-01-01' AS Date))
+INSERT [dbo].[GV_ChucVuDang] ([IdGiaoVien], [IdChucVuDang], [NgayNhan]) VALUES (11, 1, CAST(N'2000-01-01' AS Date))
 go
 
 INSERT [dbo].[LoaiDayHoc] ([Ten], [GioChuan], [DonViTinh]) VALUES (N'Giảng dạy lý thuyết đối với lớp từ 75 học viên trở xuống', 1, 1)
