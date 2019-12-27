@@ -41,6 +41,33 @@ as begin
 end
 go
 
+create or alter function kiemTraThuocKyNamHoc(@namHoc varchar(10), @kiHoc nvarchar(10), @ngayNhan date, @ngayHoanThanh date) 
+returns bit
+as
+begin
+	declare @result bit = 0
+	if (@ngayHoanThanh is null ) set @ngayHoanThanh = GETDATE();
+	if (@ngayNhan is null) set @ngayNhan = GETDATE();
+
+	if((@ngayNhan >= @ngayHoanThanh) or (LEFT(@namHoc, 4) >= RIGHT(@namHoc ,4)) )
+		set @result = 0
+	else begin 
+		declare @ngayBatDauMin  date ;
+		declare @soTuanTrong1Ky int = 19
+		declare @ngayBatDau date = CONVERT(date ,LEFT(@namHoc, 4) +'/9/2')
+		if(@kiHoc = '2')
+			set @ngayBatDau = DATEADD(DD , @soTuanTrong1Ky*7 , @ngayBatDau)
+
+		declare @ngayKetThuc date = DATEADD(DD , @soTuanTrong1Ky*7 , @ngayBatDau)
+
+		if(@ngayBatDau < @ngayHoanThanh and @ngayNhan < @ngayKetThuc ) begin
+			set @result = 1;
+		end 
+	end
+	return @result ;
+end
+go
+
 
 create or alter function kiemTraThoiGianBatDau(@namHoc varchar(10), @kiHoc nvarchar(10), @ngayLay date) returns bit
 as
@@ -66,11 +93,12 @@ go
 
 select dbo.kiemTraThoiGianBatDau('2018-2019' , '1' , '2019-1-13') go 
 
-create or alter function kiemTraThoiGianKhoang(@namHoc varchar(10), @kiHoc nvarchar(10), @ngayNhan date, @ngayHoanThanh date) 
-returns int
+
+create or alter function tyLeHocKy(@namHoc varchar(10), @kiHoc nvarchar(10), @ngayNhan date, @ngayHoanThanh date) 
+returns float
 as
 begin
-	declare @result int =0
+	declare @result float =0
 	declare @soTuanTrong1Ky int = 19
 
 	if (@ngayHoanThanh is null ) set @ngayHoanThanh = GETDATE();
@@ -81,7 +109,7 @@ begin
 		declare @ngayBatDauMin  date ;
 		declare @ngayKetThucMin	date ;
 
-		declare @ngayBatDau date = CONVERT(date ,substring(@namHoc , 1, 4) +'/9/2')
+		declare @ngayBatDau date = CONVERT(date , LEFT(@namHoc, 4) +'/9/2')
 		
 		if(@kiHoc = '2')
 			set @ngayBatDau = DATEADD(DD , @soTuanTrong1Ky*7 , @ngayBatDau)
@@ -91,17 +119,16 @@ begin
 		if(@ngayBatDau < @ngayHoanThanh and @ngayNhan < @ngayKetThuc ) begin
 			set @ngayBatDauMin = IIF(@ngayBatDau >= @ngayNhan , @ngayBatDau , @ngayNhan)
 			set @ngayKetThucMin = IIF(@ngayKetThuc <= @ngayHoanThanh , @ngayKetThuc , @ngayHoanThanh )
-			set @result = DATEDIFF(DD, @ngayBatDauMin , @ngayKetThucMin)
+			set @result = DATEDIFF(DD, @ngayBatDauMin , @ngayKetThucMin)/cast(@soTuanTrong1Ky*7 as float) 
 		end 
-	
 	end
 	if (@result < 0) set @result = 0;
 	return @result
 end
 go
-select dbo.kiemTraThoiGianKhoang('2023-2024' ,'2' , '2019/1/13' , '2019/5/12')
-go 
 
+select dbo.tyLeHocKy ('2019-2020' ,'1' , '9/4/2019' , '12/2/2019')
+go
 
 
 create or alter procedure ThongKeNhanLucTheoKhoa (
@@ -288,41 +315,51 @@ create or alter procedure ThongKeNghienCuuDeTai
 )
 as begin
 	declare @TyLeChuTri int = dbo.tyLeChuTri()
-	declare @NgayTraiQua int = 0
-	select DeTai.Ten as TenCongTrinhKhoaHoc, LoaiDeTai.Ten as Loai,
+	select DeTai.Ten as TenCongTrinhKhoaHoc,  LoaiDeTai.Ten as Loai,
 	case
         when  GV_DeTaiNghienCuu.LaChuTri = 1 then 'Chủ trì'
         else 'Thành viên'end as VaiTro, 
-	DeTai.SoThanhVien as SoTacGia , ROUND((
-		dbo.kiemTraThoiGianKhoang(@namhoc , @kyhoc , NgayBatDau , NgayKetThuc)*(1-@TyLeChuTri)*(GioChuan/(19*7*DonViTinh))/SoThanhVien + 
-		(LaChuTri * @TyLeChuTri *GioChuan) 
-	),1) as GioChuan
+	DeTai.SoThanhVien as SoTacGia , 
+	ROUND(dbo.tyLeHocKy(@namhoc , @kyhoc , NgayBatDau , NgayKetThuc)*SoGio, 1) as GioChuan
 	from DeTai  join GV_DeTaiNghienCuu  on DeTai.Id=GV_DeTaiNghienCuu.IdDeTai 
 				join LoaiDeTai on LoaiDeTai.Id =DeTai.IdLoaiDeTai 
 	where IdGiaoVien = @magiaovien 
-		and dbo.kiemTraThoiGianKhoang(@namhoc , @kyhoc , NgayBatDau , NgayKetThuc) >0
+		and dbo.kiemTraThuocKyNamHoc(@namhoc , @kyhoc , NgayBatDau , NgayKetThuc) = 1
 end
 go
 
-exec ThongKeNghienCuuDeTai 1 , '2018-2019' , '1' 
+
+
+
+
+exec ThongKeNghienCuuDeTai 1 , '2017-2018' , '1' 
 go
 
 create or alter trigger Update_GVDeTaiNghienCuu on GV_DeTaiNghienCuu after UPDATE 
 as 
 begin 
 	if UPDATE(IdDeTai) or UPDATE(LaChuTri)  begin 
-		declare @Id int, @GioChuan float, @DonViTinh float, @SoThanhVien int
+		declare @Id int, @GioChuan float, @SoThanhVien int
 		select @Id = inserted.Id FROM inserted INNER JOIN deleted ON inserted.Id = deleted.Id
 		
-		select @GioChuan=GioChuan, @DonViTinh=DonViTinh,  @SoThanhVien=SoThanhVien 
-		from GV_BaiBao 
-		join BaiBao  on GV_BaiBao.IdBaiBao = BaiBao.Id
-		join LoaiBaiBao on LoaiBaiBao.Id =BaiBao.IdLoaiBaiBao  
-		where GV_BaiBao.Id=@Id
+		select @GioChuan=GioChuan, @SoThanhVien=SoThanhVien 
+		from GV_DeTaiNghienCuu join DeTai  on GV_DeTaiNghienCuu.IdDeTai = DeTai.Id
+								join LoaiDeTai on LoaiDeTai.Id =DeTai.IdLoaiDeTai  
+		where GV_DeTaiNghienCuu.Id=@Id
 
-		update GV_BaiBao 
-		set SoGio= @GioChuan*@DonViTinh/@SoThanhVien
-		where GV_BaiBao.Id = @Id
+		declare @TyLeChuTri float  
+		select @TyLeChuTri = dbo.tyLeChuTri() 
+
+		if(@SoThanhVien > 0 ) begin
+			update GV_DeTaiNghienCuu 
+			set SoGio= LaChuTri*@GioChuan*@TyLeChuTri + (1-@TyLeChuTri)* @GioChuan/@SoThanhVien
+			where GV_DeTaiNghienCuu.Id = @Id
+		end
+		else begin
+			update GV_DeTaiNghienCuu 
+			set SoGio=0
+			where GV_DeTaiNghienCuu.Id = @Id
+		end
 	end
 end
 go 
@@ -505,7 +542,6 @@ as begin
 		SoTacGia int ,
 		GioChuan  float
 	)
-
 	insert @danhsach exec ThongKeNghienCuuDeTai @magiaovien , @namhoc, @kyhoc
 	insert @danhsach exec ThongKeBaiBao @magiaovien , @namhoc, @kyhoc
 	insert @danhsach exec ThongKeVietSach @magiaovien , @namhoc, @kyhoc
