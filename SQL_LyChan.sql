@@ -34,6 +34,7 @@ join DinhMucNghienCuu on DinhMucNghienCuu.Id=HocHam.IdDMNghCuu
 
 ---------------------------------------------------------------------------------------------
 
+
 --Trigger update for table ChucVuDang
 create trigger update_ChucVuDang on ChucVuDang for update
 as
@@ -53,6 +54,54 @@ select * from GV_ChucVuDang
 select * from ChucVuDang
 
 update ChucVuDang set IdTLMienGiam = 10 where Id = 1
+
+
+
+
+
+drop trigger update_ChucVuDang
+
+--Sử dụng transation để cập nhật
+
+alter proc sp_UpdateChucVuDang
+@idChucVu int, @idTLMienGiam int
+as
+begin
+	begin try
+		begin tran;
+			declare @TyLeMienGiam float
+			set @TyLeMienGiam= (select TyLe from TyLeMienGiam where Id=@idTLMienGiam)
+
+			update GV_ChucVuDang set TLMienGiam=@TyLeMienGiam where IdChucVuDang=@idChucVu;
+
+			update ChucVuDang set IdTLMienGiam=@idTLMienGiam where Id=@idChucVu;
+		
+		if exists (select * from ChucVuDang where Id=@idChucVu)
+			commit tran;
+
+	end try
+
+	begin catch
+		declare @loi nvarchar(100)
+		set @loi=N'Lỗi không tồn tại tỷ lệ miễn giảm với id = '+ CONVERT(varchar(10),@idTLMienGiam);
+		raiserror(@loi, 16, 1)
+		ROLLBACK TRAN;
+	end catch;
+
+	if @@TRANCOUNT > 0
+	begin
+		print N'Không tồn tại Chức vụ đảng với id = '+CONVERT(varchar(10),@idChucVu);
+		ROLLBACK TRAN;
+	end
+
+end;
+
+
+select * from GV_ChucVuDang
+
+select * from ChucVuDang
+
+sp_UpdateChucVuDang 100, 1
 
 
 --------------------------------------------------------------------------------------------
